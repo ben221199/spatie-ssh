@@ -133,18 +133,25 @@ class Ssh
     public function getExecuteCommand($command): string
     {
         $commands = $this->wrapArray($command);
-
-        $extraOptions = implode(' ', $this->getExtraOptions());
-
-        $commandString = implode(PHP_EOL, $commands);
-
+        $extraOptions = $this->getExtraOptions();
+        $target = $this->getTarget();
         $delimiter = 'EOF-SPATIE-SSH';
 
-        $target = $this->getTarget();
+        $commandString = implode(PHP_EOL,$commands);
+        $extraOptionString = implode(' ',$extraOptions);
 
-        return "ssh {$extraOptions} {$target} 'bash -se' << \\$delimiter".PHP_EOL
-            .$commandString.PHP_EOL
-            .$delimiter;
+        $commandline = [];
+
+        $commandline[] = 'ssh';
+        if(count($extraOptions)>0){
+            $commandline[] = $extraOptionString;
+        }
+        $commandline[] = $target;
+
+        $bashCommand = "\"bash -se << \\".$delimiter.PHP_EOL.$commandString.PHP_EOL.$delimiter."\"";
+        $commandline[] = $bashCommand;
+
+        return implode(' ',$commandline);
     }
 
     /**
